@@ -24,17 +24,17 @@ char configxml_formatstr[] = {
 		</requestoverride>\n\
 	</targeturl>\n"};
 
-u32 ROP_POPR0R1R2R3R4R5R6PC = 0x001134d3;
+u32 ROP_POPR0R1R2R3R4R5R6PC = 0x0011356f; 
 
-u32 ROP_POPR1R2R3PC = 0x00102341;
+u32 ROP_POPR1R2R3PC = 0x00102341; 
 
 u32 ROP_POPR2R3R4PC = 0x0010065d;
 
-u32 ROP_POPR4R5R67PC = 0x0012195f;
+u32 ROP_POPR4R5R67PC = 0x00121a77;
 
 u32 ROP_POPR4PC = 0x001000d1;
 
-u32 ROP_STACKPIVOT = 0x00142a64;//Add sp with r3 then pop-pc. 
+u32 ROP_STACKPIVOT = 0x00142c8c;//Add sp with r3 then pop-pc. 
 
 u32 ROP_POPPC;
 
@@ -42,31 +42,31 @@ u32 ROP_LDRR0R1_BXR2 = 0x001022e5;//"ldr r0, [r1, #0]" "bx r2"
 
 u32 ROP_STRR0R1 = 0x001005e3;//"str r0, [r1, #0]" bx-lr
 
-u32 ROP_LDRR0SP0_POPR3PC = 0x0011538b;//"ldr r0, [sp, #0]" "pop {r3, pc}"
+u32 ROP_LDRR0SP0_POPR3PC = 0x00115427;//"ldr r0, [sp, #0]" "pop {r3, pc}"
 
 u32 ROP_POPR3PC;
 
-u32 ROP_BLXR4_POPR3R4R5PC = 0x00138225;//"blx r4" "pop {r3, r4, r5, pc}"
+u32 ROP_BLXR4_POPR3R4R5PC = 0x00138435;//"blx r4" "pop {r3, r4, r5, pc}"
 
-u32 ROP_MOVR1R0_BXLR = 0x0013b23d;//"mov r1, r0" "bx lr"
+u32 ROP_MOVR1R0_BXLR = 0x0013b469;//"mov r1, r0" "bx lr"
 
 u32 ROP_ADDR0R0R3_POPR2R3R4R5R6PC = 0x00104eb1;//"adds r0, r0, r3" "pop {r2, r3, r4, r5, r6, pc}"
 
-u32 ROP_httpc_CreateContext = 0x001212d9;//inr0=_this inr1=url* inr2=u8 reqmethod inr3=flag. When flag is non-zero, use SetProxyDefault.
-u32 ROP_httpc_CloseContext = 0x00123d55;//inr0=_this
-u32 ROP_httpc_AddRequestHeader = 0x00120751;//inr0=_this inr1=namestr* inr2=valuestr*
+u32 ROP_httpc_CreateContext = 0x001213f1;//inr0=_this inr1=url* inr2=u8 reqmethod inr3=flag. When flag is non-zero, use SetProxyDefault.
+u32 ROP_httpc_CloseContext = 0x00123ee5;//inr0=_this
+u32 ROP_httpc_AddRequestHeader = 0x00120869;//inr0=_this inr1=namestr* inr2=valuestr*
 
-u32 ROP_svcSendSyncRequest = 0x001278ec;//svc 0x32 bx-lr
-u32 ROP_svcCloseHandle = 0x0012790c;//svc 0x23 bx-lr
+u32 ROP_svcSendSyncRequest = 0x00127a88;//svc 0x32 bx-lr
+u32 ROP_svcCloseHandle = 0x00127aa8;//svc 0x23 bx-lr
 
-u32 ROP_get_tls = 0x00127a24;//r0 = tls+0 then bx-lr.
+u32 ROP_get_tls = 0x00127bc0;//r0 = tls+0 then bx-lr.
 
-u32 ROP_memcpy = 0x001245e4;
+u32 ROP_memcpy = 0x00124774;
 
 u32 BOSS_psps_sessionhandle = 0x0014b204;
 u32 BOSS_fsuser_sessionhandle = 0x0014b198+16;
 
-u32 BOSS_httptargetfunc_ropretaddr = 0x0010c10b;//This is after the original return-addr, for calling the targeted function again.
+u32 BOSS_httptargetfunc_ropretaddr = 0x0010c197;//This is after the original return-addr, for calling the targeted function again.
 u32 BOSS_httptargetfunc_useragent_stackaddr = 0x0803ba44;//Normal boss HTTP GET tasks. //policylist: 0x0803b7f8-0xa4;
 
 u32 contentdatabuf_addr = 0x08032c00;//Unused memory near the end of the heap.
@@ -426,7 +426,7 @@ int main(int argc, char **argv)
 		printf("Generate the ctr-httpwn config and http data for 3DS BOSS-sysmodule haxx.\n");
 		printf("Usage:\n");
 		printf("%s <config|http> <version> <options>\n", argv[0]);
-		printf("Supported versions: 'v13314'.\n");
+		printf("Supported versions: 'v14337'.\n");
 		printf("Options:\n");
 		printf("--outpath=<filepath> Output path. If not specified stdout will be used instead.\n");
 		printf("--url=<url> ctr-httpwn config <url> tag content. Default is the policylist url.\n");
@@ -448,7 +448,7 @@ int main(int argc, char **argv)
 		return 2;
 	}
 
-	if(strcmp(argv[2], "v13314"))
+	if(strcmp(argv[2], "v14337"))
 	{
 		printf("Invalid version: %s\n", argv[2]);
 		return 3;
