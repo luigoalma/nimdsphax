@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+
+	<incompatsysver_message>The sysmodule version must be the one from system-version >=11.4.0-X.</incompatsysver_message>
+	
+	<targeturl required_title="0004013000002C02,0,v14341"> <!-- >=11.8.0-X -->
+		<name>User-Agent</name>
+		<caps>AddRequestHeader</caps>
+		<url>https://l-npns.app.nintendo.net/api/v1/</url>
+		<new_url></new_url>
+		<maxrun_set>1</maxrun_set>
+		<maxrun>2</maxrun>
+		<requestoverride type="reqheader">
+			<name>User-Agent</name>
+			<new_value format="hex">FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF10821700DEADDEAD848B1700C1E11400BFE114009C801700B40B1200</new_value>
+			<new_descriptorword_value>0x2cc</new_descriptorword_value>   
+		</requestoverride>
+	</targeturl>
+</config>
+

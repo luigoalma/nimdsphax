@@ -152,7 +152,7 @@ int config_parse(configctx *config, char *xml)
 					ret = AM_GetTitleInfo((FS_MediaType)tmpval0, 1, &titleid, &title_entry);
 					if(ret!=0)
 					{
-						printf("WARNING: Failed to get the title info for the title specified by config: 0x%08x.\n", (unsigned int)ret);
+						printf("WARNING: Failed to get the title info for the title specified by config: 0x%08x.\n", ret);
 						if(textptr)printf("targeturl name = %s\n", textptr);
 						printf("Config won't be loaded for this targeturl entry.\n");
 						continue;

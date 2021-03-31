@@ -1,0 +1,14 @@
+<services autodetect="false">
+	<request priority="1">http:C</request>
+</services>
+
+<!-- -->
+<targets selectable="false">
+	<title mediatype="0">0004001000021a00</title>
+	<title mediatype="0">0004001000022a00</title>
+	<title mediatype="0">0004001000020a00</title>
+	<title mediatype="0">0004001000027a00</title>
+	<title mediatype="0">0004001000028a00</title>
+	<title mediatype="0">0004001000026a00</title>
+</targets>
+<!-- -->

@@ -7,6 +7,8 @@
 #include <unistd.h>
 #include <3ds.h>
 
+#include <common_errors.h>
+
 //The decompression code here is from: https://github.com/smealum/ninjhax2.x/blob/master/app_bootloader/source/takeover.c
 
 u32 getle32(const u8* p)
@@ -160,14 +162,14 @@ Result loadcodebin(u64 programid, FS_MediaType mediatype, u8 **codebin_buf, u32 
 	if(filesize & (1<<31))
 	{
 		FSFILE_Close(filehandle);
-		return -2;
+		return RES_DATA_TOO_LARGE;
 	}
 
 	readbuf = malloc(filesize);
 	if(readbuf==NULL)
 	{
 		FSFILE_Close(filehandle);
-		return -3;
+		return RES_NO_MEMORY;
 	}
 
 	memset(readbuf, 0, filesize);
@@ -177,7 +179,7 @@ Result loadcodebin(u64 programid, FS_MediaType mediatype, u8 **codebin_buf, u32 
 	{
 		free(readbuf);
 		FSFILE_Close(filehandle);
-		if(transfersize!=filesize)return -4;
+		if(transfersize!=filesize)return RES_INVALID_SIZE;
 		return ret;
 	}
 
@@ -187,22 +189,22 @@ Result loadcodebin(u64 programid, FS_MediaType mediatype, u8 **codebin_buf, u32 
 	if(decomsize & (1<<31))
 	{
 		free(readbuf);
-		return -5;
+		return RES_DATA_TOO_LARGE;
 	}
 
 	decombuf = malloc(decomsize);
 	if(decombuf==NULL)
 	{
 		free(readbuf);
-		return -6;
+		return RES_NO_MEMORY;
 	}
 	memset(decombuf, 0, decomsize);
 
-	ret = lzss_decompress(readbuf, filesize, decombuf, decomsize);
+	ret = lzss_decompress(readbuf, filesize, decombuf, decomsize) ? RES_OUT_OF_BOUNDS : 0;
 
 	free(readbuf);
 
-	if(ret==0)
+	if(R_SUCCEEDED(ret))
 	{
 		*codebin_buf = decombuf;
 		*codebin_size = decomsize;
