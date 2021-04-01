@@ -18,6 +18,8 @@ AM sessions have more unpredictability of the stack positioning for the session 
 - nimhax is prepared for NIM `v14341` (introduced in 11.8)
 - am11pwn is prepared for AM `v10245` (introduced in 11.8)
 
+Any version between since 11.8 until and including 11.14 (latest as of this writing) should be able to run it fine.
+
 # Credits
 
 (Included credits from original [ctr-httpwn](https://github.com/yellows8/ctr-httpwn))
@@ -30,3 +32,6 @@ AM sessions have more unpredictability of the stack positioning for the session 
 * types.h at ipctakeover/boss/ is from ctrtool.
 * The filepath for "url_config.txt" is from here: https://github.com/skiptirengu/ctr-httpwn
 
+# Side note
+
+This is a duplicate repository of [ctr-httpwn](https://github.com/yellows8/ctr-httpwn) because this did not start as a fork of it, this was initialized differently and also could not private fork the repository. This started as a private repository.
