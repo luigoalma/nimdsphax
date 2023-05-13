@@ -38,9 +38,9 @@ DATA		:=	data
 INCLUDES	:=	include
 ROMFS		:=	romfs
 
-APP_TITLE	:=	nimhax
-APP_DESCRIPTION := Exploit nim with ctr-httpwn from yellows8
-APP_AUTHOR	:=	luigoalma
+APP_TITLE	:=	nimdsphax
+APP_DESCRIPTION := nimhax with tux's dsp ipctakeover
+APP_AUTHOR	:=	TuxSH & luigoalma
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -51,7 +51,7 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
+CFLAGS	+=	$(INCLUDE) -D__3DS__
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 

