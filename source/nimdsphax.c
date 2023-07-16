@@ -131,6 +131,7 @@ static Result dspTakeoverClientAction(void)
 	return res;
 }
 
+#if 0
 static Result NIMS_GetErrorCode(int* error_code) {
 	Result ret = 0;
 	u32 *cmdbuf = getThreadCommandBuffer();
@@ -143,6 +144,7 @@ static Result NIMS_GetErrorCode(int* error_code) {
 
 	return (Result)cmdbuf[1];
 }
+#endif
 
 Result funWithNim() {
 	Result ret;

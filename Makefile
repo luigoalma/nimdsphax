@@ -33,7 +33,7 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/ctr_httpwn source/nim_am_rops source/utils
+SOURCES		:=	source source/ctr_httpwn source/nim_dsp_rops source/utils
 DATA		:=	data
 INCLUDES	:=	include
 ROMFS		:=	romfs
