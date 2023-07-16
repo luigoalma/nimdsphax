@@ -6,7 +6,7 @@
 #include <common_errors.h>
 
 //#include <utils/crypto.h>
-//#include <utils/fileio.h>
+#include <utils/fileio.h>
 
 #define PSTID 0x0004013000003102ULL
 #define DSPTID 0x0004013000001A02ULL
@@ -119,9 +119,9 @@ static Result dspTakeoverClientAction(void)
 
 	TRY(dspInit());
 
-	u8 fakeDspFirmware[0x180] = {0}; // lenny
+	static u16 fakeDspFirmware[0x180] = {0}; // lenny
 
-	res = DSP_LoadComponent(fakeDspFirmware, 0x180, 0xFF, 0xFF, &isLoaded);
+	res = DSP_LoadComponent(fakeDspFirmware, sizeof(fakeDspFirmware), 0xFF, 0xFF, &isLoaded);
 
 	dspExit();
 
@@ -207,7 +207,7 @@ Result funWithNim() {
 	if (R_FAILED(ret))
 		printf("DSP takeover (client part) failed: %08lx\n", ret);
 
-	dbg();
+	//dbg();
 
 	nsExit();
 	_nimsExit();
@@ -363,6 +363,7 @@ static Result try_ensure_npns() {
 
 // ---------------------------------------
 
+#if 0
 static Result try_ensure_nim_tokens() {
 	// init nim the standard way first
 	Result ret = MAKERESULT(RL_FATAL, RS_OUTOFRESOURCE, RM_APPLICATION, RD_OUT_OF_MEMORY);
@@ -384,6 +385,34 @@ static Result try_ensure_nim_tokens() {
 	linearFree(mem);
 	return ret;
 }
+#endif
+
+Result gspwn_limit_test() {
+	void* mem = linearMemAlign(0x80000, 0x1000);
+	if (!mem) return -1;
+	memset(mem, 0, 0x80000);
+	Result ret = GSPGPU_FlushDataCache((void*)(0x38000000-0x80000), 0x80000);
+	if (R_SUCCEEDED(ret)) ret = GSPGPU_FlushDataCache(mem, 0x80000);
+	if (R_FAILED(ret)) {
+		linearFree(mem);
+		return ret;
+	}
+	ret = GX_TextureCopy((u32*)(0x38000000-0x80000), 0xFFFFFFFF, (u32*)mem, 0xFFFFFFFF, 0x80000, 0x8);
+	if (R_FAILED(ret)) {
+		linearFree(mem);
+		return ret;
+	}
+	svcSleepThread(500 * 1000 * 1000);
+	FILEIO* fp = fileio_open("sdmc:/dump_test.mem", "wb");
+	if (!fp) {
+		linearFree(mem);
+		return -1;
+	}
+	fileio_write(mem, 1, 0x80000, fp);
+	fileio_close(fp);
+	linearFree(mem);
+	return 0;
+}
 
 int main(int argc, char **argv)
 {
@@ -404,15 +433,15 @@ int main(int argc, char **argv)
 
 	ret = check_nim_version();
 
-	if(R_SUCCEEDED(ret)) {
-		printf("Initializing nim...\n");
-		try_ensure_nim_tokens(); // may not be the reason to lose hope yet if fail
-	} else {
+	//if(R_SUCCEEDED(ret)) {
+	//	printf("Initializing nim...\n");
+	//	try_ensure_nim_tokens(); // may not be the reason to lose hope yet if fail
+	//} else {
 		if (ret == RES_INVALID_VALUE) 
 			printf("NIM version invalid, expecting v14341\n");
 		else
-			printf("Error while trying to check nim version\n");
-	}
+			printf("Error while trying to check nim version. %08lX\n", ret);
+	//}
 
 	if (R_SUCCEEDED(ret)) {
 		printf("Trying to ensure npns tokens...\n");
@@ -442,9 +471,14 @@ int main(int argc, char **argv)
 		printf("Initialized res = 0x%08lx\n", ret);
 	}
 
-	if(R_SUCCEEDED(ret)) ret = funWithNim();
+	if (R_SUCCEEDED(ret)) ret = funWithNim();
 
-	if(R_SUCCEEDED(ret)) printf("Done.\n");
+	if (R_SUCCEEDED(ret)) {
+		ret = gspwn_limit_test();
+		printf("gspwn_limit_test: 0x%08lX\n", ret);
+	}
+
+	if (R_SUCCEEDED(ret)) printf("Done.\n");
 	else {
 		if (ret == RES_APT_CANCELED)
 			{/* ignore */}
