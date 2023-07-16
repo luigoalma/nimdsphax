@@ -526,19 +526,12 @@ int main(int argc, char **argv)
 	consoleSelect(&bottomScreen);
 
 	printf("nimhax with ctr-httpwn\n");
-	printf("am11pwn with nimhax\n\n");
+	printf("dsp pwning with nimhax\n\n");
 
 	ret = check_nim_version();
 
-	//if(R_SUCCEEDED(ret)) {
-	//	printf("Initializing nim...\n");
-	//	try_ensure_nim_tokens(); // may not be the reason to lose hope yet if fail
-	//} else {
-		if (ret == RES_INVALID_VALUE) 
-			printf("NIM version invalid, expecting v14341\n");
-		else
-			printf("Error while trying to check nim version. %08lX\n", ret);
-	//}
+	if (ret == RES_INVALID_VALUE) 
+		printf("NIM version invalid, expecting v14341\n");
 
 	if (R_SUCCEEDED(ret)) {
 		printf("Trying to ensure npns tokens...\n");
