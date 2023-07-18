@@ -1,6 +1,6 @@
 # nimdpshax
 
-An altered version of nimhax to pwn dsp with an emulated ps:ps service and exploit kernel
+An altered version of nimhax to pwn dsp with an emulated ps:ps service, set GPUPROT and exploit kernel.
 
 # Required sysmodule versions
 
@@ -14,7 +14,7 @@ Any version between since 11.8 until and including 11.17 (latest as of this writ
 
 (Included credits from original [ctr-httpwn](https://github.com/yellows8/ctr-httpwn))
 
-* @Tuxsh for the [exploit writeup](https://gist.github.com/TuxSH/c7a236ea59f363314e93daa60fefd983) in C for killing PS, emulating it and ipctakeover DSP.
+* @Tuxsh for the [exploit writeup](https://gist.github.com/TuxSH/c7a236ea59f363314e93daa60fefd983) in C for killing PS, emulating it and ipctakeover DSP and set GPUPROT to 0.
 * @Tuxsh for the [>= 11.4 httpwn method](https://github.com/TuxSH/universal-otherapp/blob/ae4c6cea93c571ce7e792f9ab7d0ef97224bf2cf/source/httpwn.c)
 * @zoogie for fix up on the httpwn sharedmem rop generation code and addresses with the mentioned above resourse. As well fix up bosshaxx addresses.
 * This uses the decompression code from here for ExeFS .code decompression: https://github.com/smealum/ninjhax2.x/blob/master/app_bootloader/source/takeover.c

@@ -20,6 +20,8 @@
 
 #define PSTID 0x0004013000003102ULL
 #define DSPTID 0x0004013000001A02ULL
+#define NIMTID 0x0004013000002C02ULL
+#define HTTPTID 0x0004013000002902ULL
 
 static inline void dbg(void)
 {
@@ -224,21 +226,6 @@ static Result dspTakeoverClientAction(void)
 	return res;
 }
 
-#if 0
-static Result NIMS_GetErrorCode(int* error_code) {
-	Result ret = 0;
-	u32 *cmdbuf = getThreadCommandBuffer();
-
-	cmdbuf[0] = IPC_MakeHeader(0x31, 0, 0); // 0x00310000
-
-	if (R_FAILED(ret = svcSendSyncRequest(*nimsGetSessionHandle()))) return ret;
-
-	if (error_code) *error_code = cmdbuf[2];
-
-	return (Result)cmdbuf[1];
-}
-#endif
-
 Result funWithNim() {
 	Result ret;
 	bool haxran;
@@ -310,19 +297,24 @@ Result funWithNim() {
 }
 // ---------------------------------------
 
-static Result check_nim_version() {
+static Result check_module_versions(u16* versions) {
 	Result ret = amInit();
 	if(R_FAILED(ret))
 		return ret;
 
-	u64 nim_tid = 0x0004013000002C02LLU;
-	AM_TitleEntry title_entry;
+	u64 tid[3] = {NIMTID, HTTPTID, DSPTID};
+	AM_TitleEntry title_entry[3];
 
-	ret = AM_GetTitleInfo(MEDIATYPE_NAND, 1, &nim_tid, &title_entry);
+	ret = AM_GetTitleInfo(MEDIATYPE_NAND, 3, &tid[0], &title_entry[0]);
 
 	if(R_SUCCEEDED(ret)) {
-		if (title_entry.version != 14341) ret = RES_INVALID_VALUE;
+		if (title_entry[0].version != 14341) ret = RES_INVALID_VALUE;
+		else if (title_entry[1].version != 14336) ret = RES_INVALID_VALUE;
+		else if (title_entry[2].version != 7169) ret = RES_INVALID_VALUE;
 		else ret = 0;
+		versions[0] = title_entry[0].version;
+		versions[1] = title_entry[1].version;
+		versions[2] = title_entry[2].version;
 	}
 
 	amExit();
@@ -458,59 +450,6 @@ static Result try_ensure_npns() {
 
 // ---------------------------------------
 
-#if 0
-static Result try_ensure_nim_tokens() {
-	// init nim the standard way first
-	Result ret = MAKERESULT(RL_FATAL, RS_OUTOFRESOURCE, RM_APPLICATION, RD_OUT_OF_MEMORY);
-	void* mem = linearAlloc(0x200000);
-
-	if (!mem) {
-		printf("Failed to allocate linear memory.\n");
-		return ret;
-	}
-
-	ret = nimsInit(mem, 0x200000);
-	if (R_FAILED(ret)) {
-		int error;
-		Result _ret = NIMS_GetErrorCode(&error);
-		if (R_FAILED(_ret)) printf("Failed to init nim:s and get error code. %08lX / %08lX\n", ret, _ret);
-		else printf("Failed to init nim:s. %08lX / %03i-%04i\n", ret, error / 10000, error % 10000);
-	}
-	nimsExit();
-	linearFree(mem);
-	return ret;
-}
-#endif
-
-#if 0
-Result gspwn_limit_test() {
-	void* mem = linearMemAlign(0x80000, 0x1000);
-	if (!mem) return -1;
-	memset(mem, 0, 0x80000);
-	Result ret = GSPGPU_FlushDataCache((void*)(0x38000000-0x80000), 0x80000);
-	if (R_SUCCEEDED(ret)) ret = GSPGPU_FlushDataCache(mem, 0x80000);
-	if (R_FAILED(ret)) {
-		linearFree(mem);
-		return ret;
-	}
-	ret = GX_TextureCopy((u32*)(0x38000000-0x80000), 0xFFFFFFFF, (u32*)mem, 0xFFFFFFFF, 0x80000, 0x8);
-	if (R_FAILED(ret)) {
-		linearFree(mem);
-		return ret;
-	}
-	svcSleepThread(500 * 1000 * 1000);
-	FILEIO* fp = fileio_open("sdmc:/dump_test.mem", "wb");
-	if (!fp) {
-		linearFree(mem);
-		return -1;
-	}
-	fileio_write(mem, 1, 0x80000, fp);
-	fileio_close(fp);
-	linearFree(mem);
-	return 0;
-}
-#endif
-
 int main(int argc, char **argv)
 {
 	char *serverconfig_localpath = "nim_config.xml";
@@ -528,19 +467,24 @@ int main(int argc, char **argv)
 	printf("nimhax with ctr-httpwn\n");
 	printf("dsp pwning with nimhax\n\n");
 
-	ret = check_nim_version();
+	u16 versions[3] = {0};
 
-	if (ret == RES_INVALID_VALUE) 
-		printf("NIM version invalid, expecting v14341\n");
+	ret = check_module_versions(&versions[0]);
+
+	if (ret == RES_INVALID_VALUE) {
+		if (versions[0] != 14341) printf("Expected NIM v14341, got v%i\n", versions[0]);
+		if (versions[1] != 14336) printf("Expected HTTP v14336, got v%i\n", versions[1]);
+		if (versions[2] != 7169)  printf("Expected DSP v7169, got v%i\n", versions[2]);
+	}
 
 	if (R_SUCCEEDED(ret)) {
 		printf("Trying to ensure npns tokens...\n");
 		ret = try_ensure_npns();
-	}
 
-	if (R_FAILED(ret)) {
-		printf("NPNS is invalid but we failed to fix it!!\n");
-		printf("res = 0x%08lx\n", ret);
+		if (R_FAILED(ret)) {
+			printf("NPNS is invalid but we failed to fix it!!\n");
+			printf("res = 0x%08lx\n", ret);
+		}
 	}
 
 	gfxFlushBuffers();

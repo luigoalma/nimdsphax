@@ -39,7 +39,7 @@ INCLUDES	:=	include
 ROMFS		:=	romfs
 
 APP_TITLE	:=	nimdsphax
-APP_DESCRIPTION := nimhax with tux's dsp ipctakeover
+APP_DESCRIPTION := nimhax with TuxSH's dsp ipctakeover
 APP_AUTHOR	:=	TuxSH & luigoalma
 
 #---------------------------------------------------------------------------------
