@@ -1,4 +1,4 @@
-# nimdpshax
+# nimdsphax
 
 An altered version of nimhax to pwn dsp with an emulated ps:ps service, set GPUPROT and exploit kernel.
 
